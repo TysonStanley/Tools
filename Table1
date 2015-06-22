@@ -1,3 +1,16 @@
+#
+# Title: Table 1 Function
+# Author: Emily Brignone - Tyson Barrett
+#   Emily Brignone: ebrignone@aggiemail.usu.edu
+#   Tyson Barrett: t.barrett@aggiemail.usu.edu
+#
+# Purpose: Makes a table of summary/descriptive statistics
+#   -- Ideally can run comparison statistics such as t-tests, ANOVA, or chi's  ***
+#   -- Formatted in such a way that xtable() and other's can use them to paste into Latex or Word
+
+# ===== # # # # # # # # # # # # # # ===== #
+# ===== #       FUNCTION          # ===== #
+# ===== # # # # # # # # # # # # # # ===== #
 # Table1(x,y,z,format,perBy)
 # 
 # x <- data.frame
@@ -13,11 +26,12 @@ mtcars$cyl <- as.factor(mtcars$cyl)
 mtcars$gear <- as.factor(mtcars$gear)
 
 #Do it
-Table1 <- function(DF,x,split=NULL,format="table",perBy="var"){
+Table1 <- function(DF,x,split=NULL,format="table",perBy="var", na.option="0"){
   require(data.table)
   require(reshape2)
   require(plyr)
   require(dplyr)
+  # GetIt function does the splitting and calculating part of the Table1 function
   GetIt <- function(DF,x,split,tab,perBy){
     OUTPUT <- data.frame()
     DT <- data.table(DF)
@@ -40,22 +54,35 @@ Table1 <- function(DF,x,split=NULL,format="table",perBy="var"){
   }
   DT <- data.table(DF)
   index <- DT[,x]
-  DT$split <- DT[,as.factor(split),with=FALSE]  
+  DT$split <- DT[,as.factor(split),with=FALSE] 
+  
+  # Calling the GetIt function and providing the raw data
   if (format=="raw"){
     return(lapply(x,FUN=GetIt, DF=DF, split=split,perBy=perBy))
+    
+  # Calling the GetIt function and providing a table summary
   } else if (format=="table"){
     head <- cbind(names(DT)[index],
-    data.frame(matrix(rep((" "),(length(levels(DT[,split]))*length(names(DT)[index]))), ncol=length(levels(DT[,split])))))
+                  data.frame(matrix(rep((" "),(length(levels(DT[,split]))*length(names(DT)[index]))), ncol=length(levels(DT[,split])))))
     headlist <- split(head, rownames(head))
     data <- lapply(lapply(x,FUN=GetIt, DF=DF, split=split, perBy=perBy), x ~ split, value.var="entry", FUN=dcast)
     out <- list()                                                                                                                                                    
     for (i in 1:length(headlist)) {
       data[[i]]$x <- as.character(data[[i]]$x)
       names(headlist[[i]]) <- names(data[[i]]) 
-      out[[i]] <- rbind(headlist[[i]], data[[i]])                                                                                                                                             
+      out[[i]] <- rbind(headlist[[i]], data[[i]])
     }
     OUTPUT <- ldply(out,data.frame)
     colnames(OUTPUT) <- c(" ", levels(DT[,split]))
+    
+    # To format with the na.option, the vars need to be character
+    vars = dim(OUTPUT)[2]
+    for (var in 1:vars){
+      OUTPUT[,var] = as.character(OUTPUT[,var])
+    }
+    # Formats with the na.option for any NA or blanks
+    OUTPUT[is.na(OUTPUT)] = na.option
+    
     return(OUTPUT)
   } else {
     stop("D'Oh! Format argument is invalid. Options are 'raw' and 'table'.")
@@ -63,3 +90,4 @@ Table1 <- function(DF,x,split=NULL,format="table",perBy="var"){
 }
 
 out <- Table1(mtcars, c(4,6,7,10,12),"cyl")
+out
