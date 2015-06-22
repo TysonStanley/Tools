@@ -80,7 +80,7 @@ Table1 <- function(DF,x,split=NULL,format="table",perBy="var", na.option="0"){
     for (var in 1:vars){
       OUTPUT[,var] = as.character(OUTPUT[,var])
     }
-    # Formats with the na.option for any NA or blanks
+    # Formats with the na.option for any NA
     OUTPUT[is.na(OUTPUT)] = na.option
     
     return(OUTPUT)
@@ -91,3 +91,4 @@ Table1 <- function(DF,x,split=NULL,format="table",perBy="var", na.option="0"){
 
 out <- Table1(mtcars, c(4,6,7,10,12),"cyl")
 out
+
